@@ -106,6 +106,7 @@ public:
         if (basicAuth) {
             generateBasicAuthentication();
         }
+        if (!prepareResolve(m_url)) return;
         startTimeout();
         startResolve();
     }
@@ -342,6 +343,7 @@ protected:
     }
 #endif
 
+    virtual bool prepareResolve(url const& uri) = 0;
     virtual void connectSocket() = 0;
     virtual void sendRequest() = 0;
     virtual void initiateReadHeader() = 0;

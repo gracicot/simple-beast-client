@@ -5,6 +5,8 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/stream.hpp>
+#include <openssl/tls1.h>
+#include <openssl/err.h>
 #include <memory>
 #if BOOST_OS_WINDOWS
 #include <wincrypt.h>
@@ -101,6 +103,18 @@ private:
             m_stream.next_layer(), this->m_resolveResults.begin(), this->m_resolveResults.end(),
             std::bind(&client_private_ssl<RequestBody, ResponseBody>::onSslConnect, self(),
                       std::placeholders::_1));
+    }
+    
+    bool prepareResolve(url const& uri) override
+    {
+        std::string host{uri.host().data(), uri.host().size()};
+        if (!SSL_set_tlsext_host_name(m_stream.native_handle(), host.c_str())) {
+            boost::system::error_code ec{static_cast<int>(::ERR_get_error()), boost::asio::error::get_ssl_category()};
+            this->fail(ConnectionError, "Error setting sni hostname: " + ec.message());
+            return false;
+        }
+        
+        return true;
     }
 
     void onSslConnect(boost::system::error_code ec)

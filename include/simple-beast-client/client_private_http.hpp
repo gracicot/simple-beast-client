@@ -45,6 +45,11 @@ private:
             std::bind(&client_private_http<RequestBody, ResponseBody>::onConnect, self(),
                       std::placeholders::_1));
     }
+    
+    bool prepareResolve(url const& uri) override
+    {
+        return true;
+    }
 
     void sendRequest()
     {
